@@ -42,3 +42,22 @@ then
     service nfs restart
 fi
 ##### END ADD CONFIG TO EXPORT FILE
+
+##### START CHECK cifs_backup.conf
+BACKUP_CONF=${SCRIPT_PATH}/cifs_backup.conf
+
+if [ ! -f ${BACKUP_CONF} ]
+then
+    touch ${BACKUP_CONF}
+    echo "# Type_of-backup,Path" > ${BACKUP_CONF}
+fi
+
+CONF_COUNT=$( grep -vc "^#" ${BACKUP_CONF} )
+
+if [ ${CONF_COUNT} -eq 0 ]
+then
+    echo "Config file is wrong, please check ${BACKUP_CONF}"
+    echo "Script terminating..."
+    exit;
+fi
+##### END CHECK cifs_backup.conf
