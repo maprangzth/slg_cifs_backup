@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author: Komsan Kamsamur <maprangzth@hotmail.com>
-# Date: 2017-05-09
+# Release Date: 2017-05-12
 # 
 ####################################################
 
@@ -9,11 +9,11 @@ SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ####################################################
 
-CONF_PATH=/home/backup/config
- RAW_PATH=/home/backup/rawlog
+CONFIG_PATH=/home/backup/config
+RAWLOG_PATH=/home/backup/rawlog
 
-[ -d ${CONF_PATH} ] || mkdir -p ${CONF_PATH}
-[ -d ${RAW_PATH} ]  || mkdir -p ${RAW_PATH}
+[ -d ${CONFIG_PATH} ] || mkdir -p ${CONFIG_PATH}
+[ -d ${RAWLOG_PATH} ] || mkdir -p ${RAWLOG_PATH}
 
 EXPORT_CONF="/etc/exports"
 EXPORT_VALUE01="/home/backup/config *(rw,no_root_squash)"
@@ -49,10 +49,10 @@ BACKUP_CONF=${SCRIPT_PATH}/cifs_backup.conf
 if [ ! -f ${BACKUP_CONF} ]
 then
     touch ${BACKUP_CONF}
-    echo "# Type_of-backup,Path" > ${BACKUP_CONF}
+    echo "# TypeOfBackup,SourcePath,DestPath" > ${BACKUP_CONF}
 fi
 
-CONF_COUNT=$( grep -vc "^#" ${BACKUP_CONF} )
+CONF_COUNT=$( egrep -v "^#|^$" ${BACKUP_CONF} | egrep -c "config|rawlog" )
 
 if [ ${CONF_COUNT} -eq 0 ]
 then
@@ -61,3 +61,43 @@ then
     exit;
 fi
 ##### END CHECK cifs_backup.conf
+
+##### START BACKUP CIFS
+SRC_CONFIG=$( grep "config" ${BACKUP_CONF} | awk -F "," '{print $2}' )
+SRC_RAWLOG=$( grep "rawlog" ${BACKUP_CONF} | awk -F "," '{print $2}' )
+
+BASE_DST=/home/softnixlogger/users/admin/cifs/
+DST_CONFIG=$( grep "config" ${BACKUP_CONF} | awk -F "," '{print $3}' )
+DST_RAWLOG=$( grep "rawlog" ${BACKUP_CONF} | awk -F "," '{print $3}' )
+
+function backupCIFS () {
+
+    [[ "${1}" == "/" ]] && SRC="" || SRC=${1}
+    [[ "${2}" == "/" ]] && DST="" || DST=${2}
+
+    if [ -z "${SRC}" -o -z "${DST}" ]
+    then
+        echo "Source or Destination is not mountpoint on system."
+    else
+        CHK_SRC=$( /bin/mountpoint -q "${SRC}" )
+        [[ $? -eq 0 ]] && REST_SRC=0 || REST_SRC=1
+
+        CHK_DST=$( /bin/mountpoint -q "${BASE_DST}${DST}" )
+        [[ $? -eq 0 ]] && REST_DST=0 || REST_DST=1
+
+        if [ ${REST_SRC} -eq 1 -o ${REST_DST} -eq 1 ]
+        then
+            echo "Source or Destination is not mountpoint on system."
+        else
+            /usr/bin/rsync --remove-source-files -vzagtop ${SRC} ${BASE_DST}${DST}
+        fi
+    fi
+
+}
+
+# Backup Config
+backupCIFS "${SRC_CONFIG}" "${BASE_DEST}${DST_CONFIG}"
+# Backup Rawlog
+backupCIFS "${SRC_RAWLOG}" "${BASE_DEST}${DST_RAWLOG}"
+
+##### END BACKUP CIFS
