@@ -96,8 +96,8 @@ function backupCIFS () {
 }
 
 # Backup Config
-backupCIFS "${SRC_CONFIG}" "${BASE_DEST}${DST_CONFIG}"
+backupCIFS "${SRC_CONFIG}" "${BASE_DST}${DST_CONFIG}"
 # Backup Rawlog
-backupCIFS "${SRC_RAWLOG}" "${BASE_DEST}${DST_RAWLOG}"
+backupCIFS "${SRC_RAWLOG}" "${BASE_DST}${DST_RAWLOG}"
 
 ##### END BACKUP CIFS
