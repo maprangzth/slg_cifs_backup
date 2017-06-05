@@ -84,15 +84,19 @@ function backupCIFS () {
         CHK_SRC=$( /bin/mountpoint -q "${SRC}" )
         [[ $? -eq 0 ]] && REST_SRC=0 || REST_SRC=1
 
-        CHK_DST=$( /bin/mountpoint -q "${BASE_DST}${DST}" )
+        CHK_DST=$( /bin/mountpoint -q "${DST}" )
         [[ $? -eq 0 ]] && REST_DST=0 || REST_DST=1
 
         if [ ${REST_SRC} -eq 1 -o ${REST_DST} -eq 1 ]
         then
             echo "Source or Destination is not mountpoint on system."
         else
-            /usr/bin/rsync --remove-source-files -vzagtop ${SRC} ${BASE_DST}${DST}
-            find ${SRC} -depth -type d -empty -delete
+            /usr/bin/rsync --remove-source-files -vzagtop ${SRC} ${DST}
+            COUNT_EMPTY=$( find ${SRC} -depth -type d -empty | wc -l )
+            if [ ${COUNT_EMPTY} -gt 1 ]
+            then
+                find ${SRC} -depth -type d -empty -delete
+            fi
         fi
     fi
 
