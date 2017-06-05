@@ -49,9 +49,9 @@ BACKUP_CONF=${SCRIPT_PATH}/cifs_backup.conf
 if [ ! -f ${BACKUP_CONF} ]
 then
     touch ${BACKUP_CONF}
-    echo "# TypeOfBackup,SourcePath,DestPath" > ${BACKUP_CONF}
-    echo "# config,/backup/24,Test" >> ${BACKUP_CONF}
-    echo "# rawlog,/backup/26,Test" >> ${BACKUP_CONF}
+    echo "#TypeOfBackup,SourcePath,DestPath" > ${BACKUP_CONF}
+    echo "#config,/backup/ID,Test" >> ${BACKUP_CONF}
+    echo "#rawlog,/backup/ID,Test" >> ${BACKUP_CONF}
 fi
 
 CONF_COUNT=$( egrep -v "^#|^$" ${BACKUP_CONF} | egrep -c "config|rawlog" )
@@ -92,6 +92,7 @@ function backupCIFS () {
             echo "Source or Destination is not mountpoint on system."
         else
             /usr/bin/rsync --remove-source-files -vzagtop ${SRC} ${BASE_DST}${DST}
+            find ${SRC} -depth -type d -empty -delete
         fi
     fi
 
